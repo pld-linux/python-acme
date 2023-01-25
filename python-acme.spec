@@ -1,14 +1,12 @@
 #
 # Conditional build:
 %bcond_without	doc	# Sphinx documentation
-%bcond_with	tests	# unit tests
-%bcond_without	python2 # CPython 2.x module
-%bcond_without	python3 # CPython 3.x module
+%bcond_without	tests	# unit tests
 
-%define		cryptography_ver	0.8
-%define		josepy_ver		1.0.0
-%define		pyopenssl_ver		0.13
-%define		requests_ver		2.4.1
+%define		cryptography_ver	1.2.3
+%define		josepy_ver		1.1.0
+%define		pyopenssl_ver		0.15.1
+%define		requests_ver		2.6.0
 %define		requests_toolbelt_ver	0.3.0
 %define		six_ver			1.9.0
 
@@ -16,47 +14,38 @@
 Summary:	Python library for the ACME protocol
 Summary(pl.UTF-8):	Biblioteka Pythona do protokołu ACME
 Name:		python-%{module}
-Version:	1.27.0
+# keep 1.11.x here for python2 support; see python3-acme.spec for python3 versions
+Version:	1.11.0
 Release:	1
+Epoch:		1
 License:	Apache v2.0
 Group:		Libraries/Python
 #Source0Download: https://pypi.org/simple/acme/
 Source0:	https://files.pythonhosted.org/packages/source/a/acme/%{module}-%{version}.tar.gz
-# Source0-md5:	3d950fd6465f8e85800a62eb7e76be19
+# Source0-md5:	2ea41be3043f0353587274ffbf01032f
 URL:		https://pypi.org/project/acme/
-BuildRequires:	rpm-pythonprov
-BuildRequires:	rpmbuild(macros) >= 1.714
-%if %{with python2}
+BuildRequires:	python-devel >= 1:2.7
+BuildRequires:	python-setuptools >= 1:36.2
+%if %{with doc} || %{with tests}
 BuildRequires:	python-cryptography >= %{cryptography_ver}
-BuildRequires:	python-devel
+BuildRequires:	python-josepy >= %{josepy_ver}
 BuildRequires:	python-pyOpenSSL >= %{pyopenssl_ver}
 BuildRequires:	python-pyrfc3339
+BuildRequires:	python-pytz
 BuildRequires:	python-requests >= %{requests_ver}
-BuildRequires:	python-sphinx_rtd_theme
-BuildRequires:	sphinx-pdg
-%if %{with tests}
-BuildRequires:	python-josepy >= %{josepy_ver}
-BuildRequires:	python-mock
-BuildRequires:	python-nose
 BuildRequires:	python-requests-toolbelt >= %{requests_toolbelt_ver}
-BuildRequires:	python-tox
+BuildRequires:	python-six >= %{six_ver}
 %endif
-%endif
-%if %{with python3}
-BuildRequires:	python3-cryptography >= %{cryptography_ver}
-BuildRequires:	python3-devel
-BuildRequires:	python3-pyOpenSSL >= %{pyopenssl_ver}
-BuildRequires:	python3-pyrfc3339
-BuildRequires:	python3-requests >= %{requests_ver}
-BuildRequires:	python3-sphinx_rtd_theme
 %if %{with tests}
-BuildRequires:	python3-josepy >= %{josepy_ver}
-BuildRequires:	python3-mock
-BuildRequires:	python3-nose
-BuildRequires:	python3-requests-toolbelt >= %{requests_toolbelt_ver}
-BuildRequires:	python3-tox
+BuildRequires:	python-mock
+BuildRequires:	python-pytest
 %endif
+%if %{with doc}
+BuildRequires:	python-sphinx_rtd_theme
+BuildRequires:	sphinx-pdg-2 >= 1.0
 %endif
+BuildRequires:	rpm-pythonprov
+BuildRequires:	rpmbuild(macros) >= 1.714
 Requires:	python-cryptography >= %{cryptography_ver}
 Requires:	python-pyOpenSSL >= %{pyopenssl_ver}
 Requires:	python-pyasn1
@@ -80,32 +69,6 @@ Management Environment (środowiska automatycznego zarządzania
 certyfikatami) zdefiniowanego przez IETF. Jest używana przez projekt
 Let's Encrypt.
 
-%package -n python3-acme
-Summary:	Python library for the ACME protocol
-Summary(pl.UTF-8):	Biblioteka Pythona do protokołu ACME
-Group:		Libraries/Python
-Requires:	python3-cryptography >= %{cryptography_ver}
-Requires:	python3-josepy >= %{josepy_ver}
-Requires:	python3-pyOpenSSL >= %{pyopenssl_ver}
-Requires:	python3-pyasn1
-Requires:	python3-pyrfc3339
-Requires:	python3-pytz
-Requires:	python3-requests >= %{requests_ver}
-Requires:	python3-requests-toolbelt >= %{requests_toolbelt_ver}
-Requires:	python3-six >= %{six_ver}
-Suggests:	python-acme-doc
-
-%description -n python3-acme
-Python library for use of the Automatic Certificate Management
-Environment protocol as defined by the IETF. It's used by the Let's
-Encrypt project.
-
-%description -n python3-acme -l pl.UTF-8
-Biblioteka Pythona do korzystania z protokołu Automatic Certificate
-Management Environment (środowiska automatycznego zarządzania
-certyfikatami) zdefiniowanego przez IETF. Jest używana przez projekt
-Let's Encrypt.
-
 %package doc
 Summary:	Documentation for python-acme library
 Summary(pl.UTF-8):	Dokumentacja do biblioteki python-acme
@@ -121,53 +84,35 @@ Dokumentacja do biblioteki Pythona ACME.
 %setup -q -n %{module}-%{version}
 
 %build
-%if %{with python2}
-%py_build %{?with_tests:test}
-%endif
+%py_build
 
-%if %{with python3}
-%py3_build %{?with_tests:test}
+%if %{with tests}
+PYTEST_DISABLE_PLUGIN_AUTOLOAD=1 \
+PYTHONPATH=$(pwd) \
+%{__python} -m pytest tests
 %endif
 
 %if %{with doc}
-%{__make} -C docs html
-
-# Clean up stuff we don't need for docs
-rm -rf docs/_build/html/{.buildinfo,_sources}
+%{__make} -C docs html \
+	SPHINXBUILD=sphinx-build-2
 %endif
 
 %install
 rm -rf $RPM_BUILD_ROOT
 
-%if %{with python2}
 %py_install
-%endif
-
-%if %{with python3}
-%py3_install
-%endif
 
 %clean
 rm -rf $RPM_BUILD_ROOT
 
-%if %{with python2}
 %files
 %defattr(644,root,root,755)
-%doc README.rst LICENSE.txt
+%doc README.rst
 %{py_sitescriptdir}/%{module}
 %{py_sitescriptdir}/%{module}-%{version}*.egg-info
-%endif
-
-%if %{with python3}
-%files -n python3-acme
-%defattr(644,root,root,755)
-%doc README.rst LICENSE.txt
-%{py3_sitescriptdir}/%{module}
-%{py3_sitescriptdir}/%{module}-%{version}*.egg-info
-%endif
 
 %if %{with doc}
 %files doc
 %defattr(644,root,root,755)
-%doc docs/_build/html/*
+%doc docs/_build/html/{_static,api,man,*.html,*.js}
 %endif
