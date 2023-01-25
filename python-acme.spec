@@ -87,6 +87,8 @@ rm -rf $RPM_BUILD_ROOT
 
 %py_install
 
+%py_postclean
+
 %clean
 rm -rf $RPM_BUILD_ROOT
 
