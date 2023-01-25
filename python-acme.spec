@@ -3,13 +3,6 @@
 %bcond_without	doc	# Sphinx documentation
 %bcond_without	tests	# unit tests
 
-%define		cryptography_ver	1.2.3
-%define		josepy_ver		1.1.0
-%define		pyopenssl_ver		0.15.1
-%define		requests_ver		2.6.0
-%define		requests_toolbelt_ver	0.3.0
-%define		six_ver			1.9.0
-
 %define		module  acme
 Summary:	Python library for the ACME protocol
 Summary(pl.UTF-8):	Biblioteka Pythona do protokołu ACME
@@ -27,14 +20,14 @@ URL:		https://pypi.org/project/acme/
 BuildRequires:	python-devel >= 1:2.7
 BuildRequires:	python-setuptools >= 1:36.2
 %if %{with doc} || %{with tests}
-BuildRequires:	python-cryptography >= %{cryptography_ver}
-BuildRequires:	python-josepy >= %{josepy_ver}
-BuildRequires:	python-pyOpenSSL >= %{pyopenssl_ver}
+BuildRequires:	python-cryptography >= 1.2.3
+BuildRequires:	python-josepy >= 1.1
+BuildRequires:	python-pyOpenSSL >= 0.15.1
 BuildRequires:	python-pyrfc3339
 BuildRequires:	python-pytz
-BuildRequires:	python-requests >= %{requests_ver}
-BuildRequires:	python-requests-toolbelt >= %{requests_toolbelt_ver}
-BuildRequires:	python-six >= %{six_ver}
+BuildRequires:	python-requests >= 2.6
+BuildRequires:	python-requests-toolbelt >= 0.3
+BuildRequires:	python-six >= 1.9
 %endif
 %if %{with tests}
 BuildRequires:	python-mock
@@ -46,14 +39,6 @@ BuildRequires:	sphinx-pdg-2 >= 1.0
 %endif
 BuildRequires:	rpm-pythonprov
 BuildRequires:	rpmbuild(macros) >= 1.714
-Requires:	python-cryptography >= %{cryptography_ver}
-Requires:	python-pyOpenSSL >= %{pyopenssl_ver}
-Requires:	python-pyasn1
-Requires:	python-pyrfc3339
-Requires:	python-pytz
-Requires:	python-requests >= %{requests_ver}
-Requires:	python-requests-toolbelt >= %{requests_toolbelt_ver}
-Requires:	python-six >= %{six_ver}
 Suggests:	python-acme-doc
 BuildArch:	noarch
 BuildRoot:	%{tmpdir}/%{name}-%{version}-root-%(id -u -n)
